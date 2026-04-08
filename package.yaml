@@ -1,0 +1,86 @@
+# https://docs.npmjs.com/cli/configuring-npm/package-json
+version: 0.0.0
+name: postcss-heading
+description: PostCSS polyfill to use the :heading pseudo-class selector today.
+keywords:
+- plugin
+- preset
+- configuration
+- css
+- styles
+- stylesheets
+- postcss
+- postcss-plugin
+- heading
+- :heading
+- h1-h6
+
+homepage: https://github.com/danielbayley/postcss-heading#readme
+repository: danielbayley/postcss-heading
+bugs: https://github.com/danielbayley/postcss-heading/issues
+
+author:
+  name: Daniel Bayley
+  email: daniel.bayley@me.com
+  url: danielbayley.dev
+
+funding: https://github.com/danielbayley/postcss-heading?sponsor=1
+license: MIT
+
+type: module
+imports:
+  "#utils": ./lib/utils.js
+  "#test": ./lib/test.js
+exports: &index ./index.js
+files: [*index]
+publishConfig:
+  access: public
+
+engines:
+  node: &node-version ">=22"
+  pnpm: &pnpm-version ">=10"
+devEngines:
+  runtime:
+    name: node
+    version: *node-version
+  packageManager:
+  - name: pnpm
+    version: *pnpm-version
+  - name: npm
+packageManager: pnpm@10.33.0
+
+dependencies:
+  postcss-selector-parser: ^7.1.1
+
+peerDependencies: &peerDependencies
+  postcss: ^8.5.6
+
+devDependencies:
+  "@csstools/selector-specificity": ^6.0.0
+  <<: *peerDependencies
+  knip: ^5.86.0
+  publint: ^0.3.18
+  yaml: ^2.8.2
+
+scripts:
+  prepare: yaml --single --merge --json --indent ${TABSIZE:-2} < package.yaml > package.json
+
+  test: node --test --experimental-test-coverage test.js
+
+  prerelease: git stash --include-untracked --keep-index && pnpm prepare
+  release: pnpm version --force --no-git-tag-version
+  postrelease: pnpm publish
+
+  prepublishOnly: publint
+  postpublish: git stash pop --quiet
+
+  version: >-
+    sed -i "" -E "s/^(version: *)$npm_old_version\$/\\1$npm_new_version/" package.yaml &&
+    git commit --message  $npm_new_version package.yaml &&
+    git tag    --annotate $npm_new_version --message v$npm_new_version &&
+    git push   --follow-tags
+
+  watch: pnpm test --watch
+  clean: git clean -X --force
+  zap: pnpm clean && rm -rf node_modules || true
+  reinstall: pnpm zap && pnpm install
